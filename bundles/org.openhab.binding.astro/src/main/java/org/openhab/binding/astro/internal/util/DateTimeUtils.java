@@ -12,11 +12,17 @@
  */
 package org.openhab.binding.astro.internal.util;
 
+import java.time.Instant;
+import java.time.Month;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.time.DateUtils;
+import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.astro.internal.config.AstroChannelConfig;
 import org.openhab.binding.astro.internal.model.Range;
 import org.slf4j.Logger;
@@ -27,12 +33,13 @@ import org.slf4j.LoggerFactory;
  *
  * @author Gerhard Riegler - Initial contribution
  */
+@NonNullByDefault
 public class DateTimeUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(DateTimeUtils.class);
     private static final Pattern HHMM_PATTERN = Pattern.compile("^([0-1][0-9]|2[0-3])(:[0-5][0-9])$");
 
-    public static final double J1970 = 2440588.0;
-    public static final double MILLISECONDS_PER_DAY = 1000 * 60 * 60 * 24;
+    private static final double J1970 = 2440588.0;
+    private static final double MILLISECONDS_PER_DAY = 1000 * 60 * 60 * 24;
 
     /** Constructor */
     private DateTimeUtils() {
@@ -50,7 +57,7 @@ public class DateTimeUtils {
      * Creates a Range object within the specified months and days. The start
      * time is midnight, the end time is end of the day.
      */
-    public static Range getRange(int startYear, int startMonth, int startDay, int endYear, int endMonth, int endDay) {
+    private static Range getRange(int startYear, int startMonth, int startDay, int endYear, int endMonth, int endDay) {
         Calendar start = Calendar.getInstance();
         start.set(Calendar.YEAR, startYear);
         start.set(Calendar.MONTH, startMonth);
@@ -70,16 +77,36 @@ public class DateTimeUtils {
     }
 
     /**
+     * Creates a Range object within the specified months and days. The start
+     * time is midnight, the end time is end of the day.
+     */
+    public static Range getRange(int startYear, Month startMonth, int startDay, int endYear, Month endMonth,
+            int endDay) {
+        return getRange(startYear, startMonth.getValue() - 1, startDay, endYear, endMonth.getValue() - 1, endDay);
+    }
+
+    /**
      * Returns a calendar object from a julian date.
      */
     public static Calendar toCalendar(double julianDate) {
         if (Double.compare(julianDate, Double.NaN) == 0 || julianDate == 0) {
-            return null;
+            throw new IllegalArgumentException();
         }
         long millis = (long) ((julianDate + 0.5 - J1970) * MILLISECONDS_PER_DAY);
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(millis);
         return DateUtils.round(cal, Calendar.MINUTE);
+    }
+
+    /**
+     * Returns a ZonedDateTime object from a julian date.
+     */
+    public static ZonedDateTime toZonedDateTime(double julianDate) {
+        if (Double.compare(julianDate, Double.NaN) == 0 || julianDate == 0) {
+            throw new IllegalArgumentException();
+        }
+        long millis = (long) ((julianDate + 0.5 - J1970) * MILLISECONDS_PER_DAY);
+        return ZonedDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneOffset.UTC).truncatedTo(ChronoUnit.MINUTES);
     }
 
     /**
@@ -124,7 +151,7 @@ public class DateTimeUtils {
     /**
      * Converts the time (hour.minute) to a calendar object.
      */
-    public static Calendar timeToCalendar(Calendar calendar, double time) {
+    public static @Nullable Calendar timeToCalendar(Calendar calendar, double time) {
         if (time < 0.0) {
             return null;
         }
@@ -146,32 +173,29 @@ public class DateTimeUtils {
      * Returns true, if two calendar objects are on the same day ignoring time.
      */
     public static boolean isSameDay(Calendar cal1, Calendar cal2) {
-        return cal1 != null && cal2 != null && DateUtils.isSameDay(cal1, cal2);
+        return DateUtils.isSameDay(cal1, cal2);
+    }
+
+    public static boolean isSameDay(ZonedDateTime date1, ZonedDateTime date2) {
+        return date1.truncatedTo(ChronoUnit.DAYS).equals(date2.truncatedTo(ChronoUnit.DAYS));
     }
 
     /**
-     * Returns a date object from a calendar.
+     * @return the next ZonedDateTime from today.
      */
-    public static Date getDate(Calendar calendar) {
-        return calendar == null ? null : calendar.getTime();
+    public static @Nullable ZonedDateTime getNextFromToday(ZonedDateTime... seasons) {
+        return getNext(ZonedDateTime.now().withZoneSameLocal(seasons[0].getZone()), seasons);
     }
 
-    /**
-     * Returns the next Calendar from today.
-     */
-    public static Calendar getNextFromToday(Calendar... calendars) {
-        return getNext(Calendar.getInstance(), calendars);
-    }
-
-    static Calendar getNext(Calendar now, Calendar... calendars) {
-        Calendar next = null;
-        Calendar firstSeasonOfYear = null;
-        for (Calendar calendar : calendars) {
-            if (firstSeasonOfYear == null || calendar.before(firstSeasonOfYear)) {
-                firstSeasonOfYear = calendar;
+    public static @Nullable ZonedDateTime getNext(ZonedDateTime now, ZonedDateTime... seasons) {
+        ZonedDateTime next = null;
+        ZonedDateTime firstSeasonOfYear = null;
+        for (ZonedDateTime season : seasons) {
+            if (firstSeasonOfYear == null || season.isBefore(firstSeasonOfYear)) {
+                firstSeasonOfYear = season;
             }
-            if (calendar.after(now) && (next == null || calendar.before(next))) {
-                next = calendar;
+            if (season.isAfter(now) && (next == null || season.isBefore(next))) {
+                next = season;
             }
         }
         return next == null ? firstSeasonOfYear : next;
@@ -184,6 +208,12 @@ public class DateTimeUtils {
         Calendar truncCal1 = DateUtils.truncate(cal1, Calendar.MINUTE);
         Calendar truncCal2 = DateUtils.truncate(cal2, Calendar.MINUTE);
         return truncCal1.getTimeInMillis() >= truncCal2.getTimeInMillis();
+    }
+
+    public static boolean isTimeGreaterEquals(ZonedDateTime zdt1, ZonedDateTime zdt2) {
+        ZonedDateTime truncCal1 = zdt1.truncatedTo(ChronoUnit.MINUTES);
+        ZonedDateTime truncCal2 = zdt2.truncatedTo(ChronoUnit.MINUTES);
+        return truncCal1.isAfter(truncCal2) || truncCal1.isEqual(truncCal2);
     }
 
     /**
@@ -210,6 +240,24 @@ public class DateTimeUtils {
         return cCal;
     }
 
+    public static ZonedDateTime applyConfig(ZonedDateTime zdt, AstroChannelConfig config) {
+        ZonedDateTime result = zdt;
+        if (config.offset != 0) {
+            result = result.plusMinutes(config.offset);
+        }
+
+        ZonedDateTime cEarliest = adjustTime(result, getMinutesFromTime(config.earliest));
+        if (result.isBefore(cEarliest)) {
+            return cEarliest;
+        }
+        ZonedDateTime cLatest = adjustTime(result, getMinutesFromTime(config.latest));
+        if (result.isAfter(cLatest)) {
+            return cLatest;
+        }
+
+        return result;
+    }
+
     private static Calendar adjustTime(Calendar cal, int minutes) {
         if (minutes > 0) {
             Calendar cTime = Calendar.getInstance();
@@ -220,10 +268,17 @@ public class DateTimeUtils {
         return cal;
     }
 
+    private static ZonedDateTime adjustTime(ZonedDateTime zdt, int minutes) {
+        if (minutes > 0) {
+            return zdt.truncatedTo(ChronoUnit.DAYS).plusMinutes(minutes);
+        }
+        return zdt;
+    }
+
     /**
      * Parses a HH:MM string and returns the minutes.
      */
-    private static int getMinutesFromTime(String configTime) {
+    private static int getMinutesFromTime(@Nullable String configTime) {
         if (configTime != null) {
             String time = configTime.trim();
             if (!time.isEmpty()) {

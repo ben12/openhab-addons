@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.ZoneId;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.junit.jupiter.api.Test;
 import org.openhab.binding.astro.internal.config.AstroChannelConfig;
 import org.openhab.binding.astro.internal.util.PropertyUtils;
@@ -32,18 +32,13 @@ import org.openhab.core.types.UnDefType;
  * @see <a href="https://github.com/openhab/openhab-addons/issues/5006">[astro]
  *      Sun Phase returns UNDEF</a>
  */
+@NonNullByDefault
 public class SunTest {
 
-    private Sun sun;
-    private AstroChannelConfig config;
+    private Sun sun = new Sun();
+    private AstroChannelConfig config = new AstroChannelConfig();
 
     private static ZoneId ZONE = ZoneId.systemDefault();
-
-    @BeforeEach
-    public void init() {
-        sun = new Sun();
-        config = new AstroChannelConfig();
-    }
 
     @Test
     public void testConstructor() throws Exception {

@@ -63,6 +63,11 @@ public class PropertyUtils {
             cal.setTimeZone(TimeZone.getTimeZone(zoneId));
             ZonedDateTime zoned = gregorianCal.toZonedDateTime().withFixedOffsetZone();
             return new DateTimeType(zoned);
+        } else if (value instanceof ZonedDateTime) {
+            ZonedDateTime zdt = (ZonedDateTime) value;
+            zdt = DateTimeUtils.applyConfig(zdt, config);
+            zdt = zdt.withZoneSameLocal(zoneId);
+            return new DateTimeType(zdt);
         } else if (value instanceof Number) {
             BigDecimal decimalValue = new BigDecimal(value.toString()).setScale(2, RoundingMode.HALF_UP);
             return new DecimalType(decimalValue);
@@ -77,7 +82,7 @@ public class PropertyUtils {
      * Returns the property value from the object instance, nested properties are possible. If the propertyName is for
      * example rise.start, the methods getRise().getStart() are called.
      */
-    public static @Nullable Object getPropertyValue(ChannelUID channelUID, Object instance) throws Exception {
+    private static @Nullable Object getPropertyValue(ChannelUID channelUID, Object instance) throws Exception {
         String[] properties = channelUID.getId().split("#");
         return getPropertyValue(instance, properties, 0);
     }

@@ -12,13 +12,14 @@
  */
 package org.openhab.binding.astro.internal.util;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.openhab.binding.astro.internal.util.DateTimeUtils.getNext;
 
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.TimeZone;
+import java.time.Month;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.junit.jupiter.api.Test;
 import org.openhab.binding.astro.internal.calc.SeasonCalc;
 import org.openhab.binding.astro.internal.model.Season;
@@ -28,22 +29,18 @@ import org.openhab.binding.astro.internal.model.Season;
  *
  * @author Hilbrand Bouwkamp - Initial contribution
  */
+@NonNullByDefault
 public class DateTimeUtilsTest {
 
-    private static final TimeZone TIME_ZONE = TimeZone.getTimeZone("Europe/Amsterdam");
-    private static final Calendar JAN_20_2020 = newCalendar(2020, Calendar.JANUARY, 20, 1, 0, TIME_ZONE);
-    private static final Calendar MAY_20_2020 = newCalendar(2020, Calendar.MAY, 20, 1, 0, TIME_ZONE);
-    private static final Calendar SEPT_20_2020 = newCalendar(2020, Calendar.SEPTEMBER, 20, 1, 0, TIME_ZONE);
-    private static final Calendar DEC_10_2020 = newCalendar(2020, Calendar.DECEMBER, 1, 1, 0, TIME_ZONE);
+    private static final ZoneId TIME_ZONE = ZoneId.of("Europe/Amsterdam");
+    private static final ZonedDateTime JAN_20_2020 = newZdt(2020, Month.JANUARY, 20, 1, 0, TIME_ZONE);
+    private static final ZonedDateTime MAY_20_2020 = newZdt(2020, Month.MAY, 20, 1, 0, TIME_ZONE);
+    private static final ZonedDateTime SEPT_20_2020 = newZdt(2020, Month.SEPTEMBER, 20, 1, 0, TIME_ZONE);
+    private static final ZonedDateTime DEC_10_2020 = newZdt(2020, Month.DECEMBER, 1, 1, 0, TIME_ZONE);
     private static final double AMSTERDAM_LATITUDE = 52.367607;
     private static final double SYDNEY_LATITUDE = -33.87;
 
-    private SeasonCalc seasonCalc;
-
-    @BeforeEach
-    public void init() {
-        seasonCalc = new SeasonCalc();
-    }
+    private SeasonCalc seasonCalc = new SeasonCalc();
 
     @Test
     public void testGetSeasonAmsterdam() {
@@ -63,15 +60,30 @@ public class DateTimeUtilsTest {
         assertNextSeason(season.getAutumn(), DEC_10_2020, season);
     }
 
-    private void assertNextSeason(Calendar expectedSeason, Calendar date, Season season) {
+    private void assertNextSeason(ZonedDateTime expectedSeason, ZonedDateTime date, Season season) {
         assertEquals(expectedSeason, DateTimeUtils.getNext(date, season.getSpring(), season.getSummer(),
                 season.getAutumn(), season.getWinter()));
     }
 
-    private static Calendar newCalendar(int year, int month, int dayOfMonth, int hourOfDay, int minute, TimeZone zone) {
-        Calendar result = new GregorianCalendar(year, month, dayOfMonth, hourOfDay, minute);
-        result.setTimeZone(zone);
+    @Test
+    public void testSeasonCalendarRemoval() {
+        ZonedDateTime theDay = ZonedDateTime.of(2021, 1, 23, 8, 0, 0, 0, TIME_ZONE);
+        ZonedDateTime spring = ZonedDateTime.of(2021, 3, 20, 8, 0, 0, 0, TIME_ZONE);
+        ZonedDateTime summer = ZonedDateTime.of(2021, 6, 21, 8, 0, 0, 0, TIME_ZONE);
+        ZonedDateTime autumn = ZonedDateTime.of(2021, 9, 21, 8, 0, 0, 0, TIME_ZONE);
+        ZonedDateTime winter = ZonedDateTime.of(2021, 12, 21, 8, 0, 0, 0, TIME_ZONE);
+        ZonedDateTime next = getNext(theDay, spring, summer, autumn, winter);
+        assertTrue(spring.equals(next)); // found in ordered season list
+        next = getNext(theDay, autumn, winter, spring, summer);
+        assertTrue(spring.equals(next)); // found in unordered season list
+        next = getNext(spring, spring, summer, autumn, winter);
+        assertTrue(summer.equals(next)); // after beginning of current season, it's the next one.
+        next = getNext(winter, spring, summer, autumn, winter);
+        assertTrue(spring.equals(next)); // we loop on first one
+    }
 
-        return result;
+    private static ZonedDateTime newZdt(int year, Month month, int dayOfMonth, int hourOfDay, int minute,
+            ZoneId zoneId) {
+        return ZonedDateTime.of(year, month.getValue(), dayOfMonth, hourOfDay, minute, 0, 0, zoneId);
     }
 }

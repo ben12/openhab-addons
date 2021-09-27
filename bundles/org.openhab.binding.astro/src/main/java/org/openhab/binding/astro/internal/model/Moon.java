@@ -12,19 +12,22 @@
  */
 package org.openhab.binding.astro.internal.model;
 
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
+
 /**
  * Holds the calculated moon data.
  *
  * @author Gerhard Riegler - Initial contribution
  */
-public class Moon extends RiseSet implements Planet {
+public class Moon extends Planet {
     private MoonPhase phase = new MoonPhase();
-    private MoonDistance apogee = new MoonDistance();
-    private MoonDistance perigee = new MoonDistance();
-    private MoonDistance distance = new MoonDistance();
+    private @Nullable MoonDistance apogee;
+    private @Nullable MoonDistance perigee;
+    private @Nullable MoonDistance distance;
     private Eclipse eclipse = new Eclipse(EclipseKind.PARTIAL, EclipseKind.TOTAL);
     private Position position = new Position();
-    private Zodiac zodiac = new Zodiac(null);
+    private @Nullable Zodiac zodiac;
 
     /**
      * Returns the moon phase.
@@ -113,14 +116,14 @@ public class Moon extends RiseSet implements Planet {
     /**
      * Returns the zodiac.
      */
-    public Zodiac getZodiac() {
+    public @Nullable Zodiac getZodiac() {
         return zodiac;
     }
 
     /**
      * Sets the zodiac.
      */
-    public void setZodiac(Zodiac zodiac) {
+    public void setZodiac(@NonNull Zodiac zodiac) {
         this.zodiac = zodiac;
     }
 }

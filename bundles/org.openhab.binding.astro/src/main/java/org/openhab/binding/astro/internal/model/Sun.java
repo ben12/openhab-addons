@@ -15,20 +15,22 @@ package org.openhab.binding.astro.internal.model;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.jdt.annotation.Nullable;
+
 /**
  * Holds the calculated sun data.
  *
  * @author Gerhard Riegler - Initial contribution
  */
-public class Sun extends RiseSet implements Planet {
+public class Sun extends Planet {
 
     private Map<SunPhaseName, Range> ranges = new HashMap<>();
 
     private Position position = new Position();
 
-    private SunZodiac zodiac = new SunZodiac(null, null);
+    private @Nullable SunZodiac zodiac;
 
-    private Season season = new Season();
+    private Season season = new Season(null, null, null, null, false);
 
     private Eclipse eclipse = new Eclipse(EclipseKind.PARTIAL, EclipseKind.TOTAL, EclipseKind.RING);
 

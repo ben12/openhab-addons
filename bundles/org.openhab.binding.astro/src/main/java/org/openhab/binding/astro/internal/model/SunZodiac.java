@@ -14,41 +14,52 @@ package org.openhab.binding.astro.internal.model;
 
 import java.util.Calendar;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
+
 /**
  * Extends the zodiac with a date range.
  *
  * @author Gerhard Riegler - Initial contribution
  */
-public class SunZodiac extends Zodiac {
-    private Range range;
+@NonNullByDefault
+public class SunZodiac {
+    private final Range range;
+    private final Zodiac sign;
 
     /**
      * Creates a Zodiac with a sign and a range.
      */
-    public SunZodiac(ZodiacSign sign, Range range) {
-        super(sign);
+    public SunZodiac(Zodiac sign, Range range) {
+        this.sign = sign;
         this.range = range;
     }
 
     /**
-     * Returns she start of the zodiac.
+     * @return she start of the zodiac.
      */
     public Calendar getStart() {
-        return range == null ? null : range.getStart();
+        return range.getStart();
     }
 
     /**
-     * Returns the end of the zodiac.
+     * @return the end of the zodiac.
      */
     public Calendar getEnd() {
-        return range == null ? null : range.getEnd();
+        return range.getEnd();
     }
 
     /**
-     * Returns true, if the zodiac is valid on the specified calendar object.
+     * @return the sign of the zodiac.
+     */
+    public String getSign() {
+        return sign.getSign();
+    }
+
+    /**
+     * @return true, if the zodiac is valid on the specified calendar object.
      */
     public boolean isValid(Calendar calendar) {
-        if (range == null || range.getStart() == null || range.getEnd() == null) {
+        if (range.getStart() == null || range.getEnd() == null) {
             return false;
         }
 

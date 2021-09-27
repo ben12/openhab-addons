@@ -12,15 +12,17 @@
  */
 package org.openhab.binding.astro.internal.model;
 
-import static org.openhab.core.library.unit.MetricPrefix.MILLI;
-
-import java.util.Calendar;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 
 import javax.measure.quantity.Time;
 
+import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.astro.internal.util.DateTimeUtils;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.unit.Units;
+import org.openhab.core.types.State;
+import org.openhab.core.types.UnDefType;
 
 /**
  * Holds the season dates of the year and the current name.
@@ -28,71 +30,51 @@ import org.openhab.core.library.unit.Units;
  * @author Gerhard Riegler - Initial contribution
  */
 public class Season {
-    private Calendar spring;
-    private Calendar summer;
-    private Calendar autumn;
-    private Calendar winter;
+    private final ZonedDateTime spring;
+    private final ZonedDateTime summer;
+    private final ZonedDateTime autumn;
+    private final ZonedDateTime winter;
 
     private SeasonName name;
 
+    public Season(ZonedDateTime spring, ZonedDateTime summer, ZonedDateTime autumn, ZonedDateTime winter,
+            boolean useMeteorologicalSeason) {
+        this.spring = useMeteorologicalSeason ? atMidnightOfFirstMonthDay(spring) : spring;
+        this.summer = useMeteorologicalSeason ? atMidnightOfFirstMonthDay(summer) : summer;
+        this.autumn = useMeteorologicalSeason ? atMidnightOfFirstMonthDay(autumn) : autumn;
+        this.winter = useMeteorologicalSeason ? atMidnightOfFirstMonthDay(winter) : winter;
+    }
+
     /**
-     * Returns the date of the beginning of spring.
+     * @return the date of the beginning of spring.
      */
-    public Calendar getSpring() {
+    public ZonedDateTime getSpring() {
         return spring;
     }
 
     /**
-     * Sets the date of the beginning of spring.
+     * @return the date of the beginning of summer.
      */
-    public void setSpring(Calendar spring) {
-        this.spring = spring;
-    }
-
-    /**
-     * Returns the date of the beginning of summer.
-     */
-    public Calendar getSummer() {
+    public ZonedDateTime getSummer() {
         return summer;
     }
 
     /**
-     * Sets the date of the beginning of summer.
+     * @return the date of the beginning of autumn.
      */
-    public void setSummer(Calendar summer) {
-        this.summer = summer;
-    }
-
-    /**
-     * Returns the date of the beginning of autumn.
-     */
-    public Calendar getAutumn() {
+    public ZonedDateTime getAutumn() {
         return autumn;
     }
 
     /**
-     * Sets the date of the beginning of autumn.
+     * @return the date of the beginning of winter.
      */
-    public void setAutumn(Calendar autumn) {
-        this.autumn = autumn;
-    }
-
-    /**
-     * Returns the date of the beginning of winter.
-     */
-    public Calendar getWinter() {
+    public ZonedDateTime getWinter() {
         return winter;
     }
 
     /**
-     * Returns the date of the beginning of winter.
-     */
-    public void setWinter(Calendar winter) {
-        this.winter = winter;
-    }
-
-    /**
-     * Returns the current season name.
+     * @return the current season name.
      */
     public SeasonName getName() {
         return name;
@@ -106,14 +88,14 @@ public class Season {
     }
 
     /**
-     * Returns the next season.
+     * @return the next season.
      */
-    public Calendar getNextSeason() {
+    public @Nullable ZonedDateTime getNextSeason() {
         return DateTimeUtils.getNextFromToday(spring, summer, autumn, winter);
     }
 
     /**
-     * Returns the next season name.
+     * @return the next season name.
      */
     public SeasonName getNextName() {
         int ordinal = name.ordinal() + 1;
@@ -124,12 +106,24 @@ public class Season {
     }
 
     /**
-     * Returns the time left for current season
+     * @return the time left for current season
      */
-    public QuantityType<Time> getTimeLeft() {
-        Calendar now = Calendar.getInstance();
-        Calendar next = getNextSeason();
-        return new QuantityType<>(next.getTimeInMillis() - now.getTimeInMillis(), MILLI(Units.SECOND))
-                .toUnit(Units.DAY);
+    public State getTimeLeft() {
+        ZonedDateTime next = getNextSeason();
+        if (next != null) {
+            ZonedDateTime now = ZonedDateTime.now().withZoneSameInstant(next.getZone());
+            return new QuantityType<Time>(now.until(next, ChronoUnit.DAYS), Units.DAY);
+        }
+        return UnDefType.UNDEF;
+    }
+
+    private ZonedDateTime atMidnightOfFirstMonthDay(final ZonedDateTime zdt) {
+        return zdt.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS);
+        // result.set(Calendar.DAY_OF_MONTH, 1);
+        // result.set(Calendar.HOUR_OF_DAY, 0);
+        // result.set(Calendar.MINUTE, 0);
+        // result.set(Calendar.SECOND, 0);
+        // result.set(Calendar.MILLISECOND, 0);
+        // return result;
     }
 }

@@ -21,6 +21,7 @@ import static org.openhab.binding.astro.internal.AstroBindingConstants.*;
 import static org.openhab.binding.astro.internal.util.DateTimeUtils.*;
 
 import java.lang.invoke.MethodHandles;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.List;
 
@@ -56,6 +57,25 @@ public interface Job extends SchedulerRunnable, Runnable {
     public static void schedule(String thingUID, AstroThingHandler astroHandler, Job job, Calendar eventAt) {
         try {
             Calendar today = Calendar.getInstance();
+            if (isSameDay(eventAt, today) && isTimeGreaterEquals(eventAt, today)) {
+                astroHandler.schedule(job, eventAt);
+            }
+        } catch (Exception ex) {
+            LOGGER.error("{}", ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * Schedules the provided {@link Job} instance
+     *
+     * @param thingUID the UID of the Thing instance
+     * @param astroHandler the {@link AstroThingHandler} instance
+     * @param job the {@link Job} instance to schedule
+     * @param eventAt the {@link ZonedDateTime} instance denoting scheduled instant
+     */
+    public static void schedule(String thingUID, AstroThingHandler astroHandler, Job job, ZonedDateTime eventAt) {
+        try {
+            ZonedDateTime today = ZonedDateTime.now().withZoneSameLocal(eventAt.getZone());
             if (isSameDay(eventAt, today) && isTimeGreaterEquals(eventAt, today)) {
                 astroHandler.schedule(job, eventAt);
             }
@@ -151,6 +171,11 @@ public interface Job extends SchedulerRunnable, Runnable {
      * @param eventAt the {@link Calendar} instance denoting scheduled instant
      */
     public static void schedulePublishPlanet(String thingUID, AstroThingHandler astroHandler, Calendar eventAt) {
+        Job publishJob = new PublishPlanetJob(thingUID);
+        schedule(thingUID, astroHandler, publishJob, eventAt);
+    }
+
+    public static void schedulePublishPlanet(String thingUID, AstroThingHandler astroHandler, ZonedDateTime eventAt) {
         Job publishJob = new PublishPlanetJob(thingUID);
         schedule(thingUID, astroHandler, publishJob, eventAt);
     }

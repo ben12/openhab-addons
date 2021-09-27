@@ -44,42 +44,42 @@ public class Eclipse {
     }
 
     /**
-     * Returns the date of the next total eclipse.
+     * @return the date of the next total eclipse.
      */
     public @Nullable Calendar getTotal() {
         return getDate(EclipseKind.TOTAL);
     }
 
     /**
-     * Returns the date of the next partial eclipse.
+     * @return the date of the next partial eclipse.
      */
     public @Nullable Calendar getPartial() {
         return getDate(EclipseKind.PARTIAL);
     }
 
     /**
-     * Returns the date of the next ring eclipse.
+     * @return the date of the next ring eclipse.
      */
     public @Nullable Calendar getRing() {
         return getDate(EclipseKind.RING);
     }
 
     /**
-     * Returns the elevation of the next total eclipse.
+     * @return the elevation of the next total eclipse.
      */
     public @Nullable Double getTotalElevation() {
         return getElevation(EclipseKind.TOTAL);
     }
 
     /**
-     * Returns the elevation of the next partial eclipse.
+     * @return the elevation of the next partial eclipse.
      */
     public @Nullable Double getPartialElevation() {
         return getElevation(EclipseKind.PARTIAL);
     }
 
     /**
-     * Returns the elevation of the next ring eclipse.
+     * @return the elevation of the next ring eclipse.
      */
     public @Nullable Double getRingElevation() {
         return getElevation(EclipseKind.RING);

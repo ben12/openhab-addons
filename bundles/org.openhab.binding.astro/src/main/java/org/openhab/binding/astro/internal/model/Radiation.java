@@ -15,6 +15,7 @@ package org.openhab.binding.astro.internal.model;
 import org.openhab.core.library.dimension.Intensity;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.unit.Units;
+import org.openhab.core.types.State;
 
 /**
  * Holds the calculated direct, diffuse and total
@@ -61,21 +62,21 @@ public class Radiation {
     /**
      * Returns the total radiation.
      */
-    public QuantityType<Intensity> getTotal() {
-        return new QuantityType<>(total, Units.IRRADIANCE);
+    public State getTotal() {
+        return new QuantityType<Intensity>(total, Units.IRRADIANCE);
     }
 
     /**
      * Returns the direct radiation.
      */
-    public QuantityType<Intensity> getDirect() {
-        return new QuantityType<>(direct, Units.IRRADIANCE);
+    public State getDirect() {
+        return new QuantityType<Intensity>(direct, Units.IRRADIANCE);
     }
 
     /**
      * Returns the diffuse radiation.
      */
-    public QuantityType<Intensity> getDiffuse() {
-        return new QuantityType<>(diffuse, Units.IRRADIANCE);
+    public State getDiffuse() {
+        return new QuantityType<Intensity>(diffuse, Units.IRRADIANCE);
     }
 }

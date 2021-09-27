@@ -16,6 +16,7 @@ import static org.openhab.binding.astro.internal.AstroBindingConstants.*;
 import static org.openhab.binding.astro.internal.job.Job.*;
 import static org.openhab.binding.astro.internal.model.SunPhaseName.*;
 
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -84,7 +85,10 @@ public final class DailyJobSun extends AbstractJob {
 
         // schedule republish jobs
         schedulePublishPlanet(thingUID, handler, sun.getZodiac().getEnd());
-        schedulePublishPlanet(thingUID, handler, sun.getSeason().getNextSeason());
+        ZonedDateTime nextSeason = sun.getSeason().getNextSeason();
+        if (nextSeason != null) {
+            schedulePublishPlanet(thingUID, handler, nextSeason);
+        }
 
         // schedule phase jobs
         scheduleSunPhase(thingUID, handler, SUN_RISE, sun.getRise().getStart());

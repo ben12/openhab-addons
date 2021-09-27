@@ -19,7 +19,9 @@ import java.util.Calendar;
 
 import javax.measure.quantity.Length;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.core.library.types.QuantityType;
+import org.openhab.core.types.State;
 
 /**
  * Holds a distance informations.
@@ -27,36 +29,27 @@ import org.openhab.core.library.types.QuantityType;
  * @author Gerhard Riegler - Initial contribution
  * @author Christoph Weitkamp - Introduced UoM
  */
+@NonNullByDefault
 public class MoonDistance {
-
     private Calendar date;
     private double distance;
 
+    public MoonDistance(Calendar date, double distance) {
+        this.date = date;
+        this.distance = distance;
+    }
+
     /**
-     * Returns the date of the calculated distance.
+     * @return the date of the calculated distance.
      */
     public Calendar getDate() {
         return date;
     }
 
     /**
-     * Sets the date of the calculated distance.
+     * @return the distance in kilometers.
      */
-    public void setDate(Calendar date) {
-        this.date = date;
-    }
-
-    /**
-     * Returns the distance in kilometers.
-     */
-    public QuantityType<Length> getDistance() {
-        return new QuantityType<>(distance, KILO(METRE));
-    }
-
-    /**
-     * Sets the distance in kilometers.
-     */
-    public void setDistance(double kilometer) {
-        this.distance = kilometer;
+    public State getDistance() {
+        return new QuantityType<Length>(distance, KILO(METRE));
     }
 }

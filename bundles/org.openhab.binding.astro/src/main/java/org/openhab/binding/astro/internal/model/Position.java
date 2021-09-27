@@ -43,7 +43,7 @@ public class Position {
      * Returns the azimuth.
      */
     public QuantityType<Angle> getAzimuth() {
-        return new QuantityType<>(azimuth, Units.DEGREE_ANGLE);
+        return new QuantityType<Angle>(azimuth, Units.DEGREE_ANGLE);
     }
 
     /**
@@ -57,7 +57,7 @@ public class Position {
      * Returns the elevation.
      */
     public QuantityType<Angle> getElevation() {
-        return new QuantityType<>(elevation, Units.DEGREE_ANGLE);
+        return new QuantityType<Angle>(elevation, Units.DEGREE_ANGLE);
     }
 
     public double getElevationAsDouble() {

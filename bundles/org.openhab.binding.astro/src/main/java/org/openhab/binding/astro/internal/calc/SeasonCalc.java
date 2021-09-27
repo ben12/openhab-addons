@@ -12,7 +12,7 @@
  */
 package org.openhab.binding.astro.internal.calc;
 
-import java.util.Calendar;
+import java.time.ZonedDateTime;
 
 import org.openhab.binding.astro.internal.model.Season;
 import org.openhab.binding.astro.internal.model.SeasonName;
@@ -31,32 +31,18 @@ public class SeasonCalc {
     /**
      * Returns the seasons of the year of the specified calendar.
      */
-    public Season getSeason(Calendar calendar, double latitude, boolean useMeteorologicalSeason) {
-        int year = calendar.get(Calendar.YEAR);
+    public Season getSeason(ZonedDateTime calendar, double latitude, boolean useMeteorologicalSeason) {
+        int year = calendar.getYear();
         boolean isSouthernHemisphere = latitude < 0.0;
         Season season = currentSeason;
         if (currentYear != year) {
-            season = new Season();
-            if (!isSouthernHemisphere) {
-                season.setSpring(calcEquiSol(0, year));
-                season.setSummer(calcEquiSol(1, year));
-                season.setAutumn(calcEquiSol(2, year));
-                season.setWinter(calcEquiSol(3, year));
-            } else {
-                season.setSpring(calcEquiSol(2, year));
-                season.setSummer(calcEquiSol(3, year));
-                season.setAutumn(calcEquiSol(0, year));
-                season.setWinter(calcEquiSol(1, year));
-            }
+            season = !isSouthernHemisphere
+                    ? new Season(calcEquiSol(0, year), calcEquiSol(1, year), calcEquiSol(2, year), calcEquiSol(3, year),
+                            useMeteorologicalSeason)
+                    : new Season(calcEquiSol(2, year), calcEquiSol(3, year), calcEquiSol(0, year), calcEquiSol(1, year),
+                            useMeteorologicalSeason);
             currentSeason = season;
             currentYear = year;
-        }
-
-        if (useMeteorologicalSeason) {
-            atMidnightOfFirstMonthDay(season.getSpring());
-            atMidnightOfFirstMonthDay(season.getSummer());
-            atMidnightOfFirstMonthDay(season.getAutumn());
-            atMidnightOfFirstMonthDay(season.getWinter());
         }
 
         season.setName(!isSouthernHemisphere ? getCurrentSeasonNameNorthern(calendar)
@@ -64,30 +50,17 @@ public class SeasonCalc {
         return season;
     }
 
-    private void atMidnightOfFirstMonthDay(Calendar calendar) {
-        calendar.set(Calendar.DAY_OF_MONTH, 1);
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-    }
-
     /**
      * Returns the current season name for the northern hemisphere.
      */
-    private SeasonName getCurrentSeasonNameNorthern(Calendar calendar) {
-        long currentMillis = calendar.getTimeInMillis();
-        if (currentMillis < currentSeason.getSpring().getTimeInMillis()
-                || currentMillis >= currentSeason.getWinter().getTimeInMillis()) {
+    private SeasonName getCurrentSeasonNameNorthern(ZonedDateTime calendar) {
+        if (calendar.isBefore(currentSeason.getSpring()) || calendar.isAfter(currentSeason.getWinter())) {
             return SeasonName.WINTER;
-        } else if (currentMillis >= currentSeason.getSpring().getTimeInMillis()
-                && currentMillis < currentSeason.getSummer().getTimeInMillis()) {
+        } else if (calendar.isAfter(currentSeason.getSpring()) && calendar.isBefore(currentSeason.getSummer())) {
             return SeasonName.SPRING;
-        } else if (currentMillis >= currentSeason.getSummer().getTimeInMillis()
-                && currentMillis < currentSeason.getAutumn().getTimeInMillis()) {
+        } else if (calendar.isAfter(currentSeason.getSummer()) && calendar.isBefore(currentSeason.getAutumn())) {
             return SeasonName.SUMMER;
-        } else if (currentMillis >= currentSeason.getAutumn().getTimeInMillis()
-                && currentMillis < currentSeason.getWinter().getTimeInMillis()) {
+        } else if (calendar.isAfter(currentSeason.getAutumn()) && calendar.isBefore(currentSeason.getWinter())) {
             return SeasonName.AUTUMN;
         }
         return null;
@@ -96,19 +69,14 @@ public class SeasonCalc {
     /**
      * Returns the current season name for the southern hemisphere.
      */
-    private SeasonName getCurrentSeasonNameSouthern(Calendar calendar) {
-        long currentMillis = calendar.getTimeInMillis();
-        if (currentMillis < currentSeason.getAutumn().getTimeInMillis()
-                || currentMillis >= currentSeason.getSummer().getTimeInMillis()) {
+    private SeasonName getCurrentSeasonNameSouthern(ZonedDateTime calendar) {
+        if (calendar.isBefore(currentSeason.getAutumn()) || calendar.isAfter(currentSeason.getSummer())) {
             return SeasonName.SUMMER;
-        } else if (currentMillis >= currentSeason.getAutumn().getTimeInMillis()
-                && currentMillis < currentSeason.getWinter().getTimeInMillis()) {
+        } else if (calendar.isAfter(currentSeason.getAutumn()) && calendar.isBefore(currentSeason.getWinter())) {
             return SeasonName.AUTUMN;
-        } else if (currentMillis >= currentSeason.getWinter().getTimeInMillis()
-                && currentMillis < currentSeason.getSpring().getTimeInMillis()) {
+        } else if (calendar.isAfter(currentSeason.getWinter()) && calendar.isBefore(currentSeason.getSpring())) {
             return SeasonName.WINTER;
-        } else if (currentMillis >= currentSeason.getSpring().getTimeInMillis()
-                && currentMillis < currentSeason.getSummer().getTimeInMillis()) {
+        } else if (calendar.isAfter(currentSeason.getSpring()) && calendar.isBefore(currentSeason.getSummer())) {
             return SeasonName.SPRING;
         }
         return null;
@@ -117,14 +85,14 @@ public class SeasonCalc {
     /**
      * Calculates the date of the season.
      */
-    private Calendar calcEquiSol(int season, int year) {
+    private ZonedDateTime calcEquiSol(int season, int year) {
         double estimate = calcInitial(season, year);
         double t = (estimate - 2451545.0) / 36525;
         double w = 35999.373 * t - 2.47;
         double dl = 1 + 0.0334 * cosDeg(w) + 0.0007 * cosDeg(2 * w);
         double s = periodic24(t);
         double julianDate = estimate + ((0.00001 * s) / dl);
-        return DateTimeUtils.toCalendar(julianDate);
+        return DateTimeUtils.toZonedDateTime(julianDate);
     }
 
     /**

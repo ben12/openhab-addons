@@ -20,6 +20,7 @@ import javax.measure.quantity.Time;
 
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.unit.Units;
+import org.openhab.core.types.State;
 
 /**
  * Holds the calculates moon phase informations.
@@ -98,8 +99,8 @@ public class MoonPhase {
     /**
      * Returns the age in days.
      */
-    public QuantityType<Time> getAge() {
-        return new QuantityType<>(age, Units.DAY);
+    public State getAge() {
+        return new QuantityType<Time>(age, Units.DAY);
     }
 
     /**
@@ -112,8 +113,8 @@ public class MoonPhase {
     /**
      * Returns the illumination.
      */
-    public QuantityType<Dimensionless> getIllumination() {
-        return new QuantityType<>(illumination, Units.PERCENT);
+    public State getIllumination() {
+        return new QuantityType<Dimensionless>(illumination, Units.PERCENT);
     }
 
     /**
@@ -140,8 +141,8 @@ public class MoonPhase {
     /**
      * Returns the age in degree.
      */
-    public QuantityType<Angle> getAgeDegree() {
-        return new QuantityType<>(ageDegree, Units.DEGREE_ANGLE);
+    public State getAgeDegree() {
+        return new QuantityType<Angle>(ageDegree, Units.DEGREE_ANGLE);
     }
 
     /**
@@ -154,8 +155,8 @@ public class MoonPhase {
     /**
      * Returns the age in percent.
      */
-    public QuantityType<Dimensionless> getAgePercent() {
-        return new QuantityType<>(agePercent, Units.PERCENT);
+    public State getAgePercent() {
+        return new QuantityType<Dimensionless>(agePercent, Units.PERCENT);
     }
 
     /**

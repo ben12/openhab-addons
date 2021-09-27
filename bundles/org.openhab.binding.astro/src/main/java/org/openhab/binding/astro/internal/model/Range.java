@@ -21,6 +21,7 @@ import javax.measure.quantity.Time;
 import org.openhab.binding.astro.internal.util.DateTimeUtils;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.unit.Units;
+import org.openhab.core.types.State;
 
 /**
  * Range class which holds a start and a end calendar object.
@@ -58,15 +59,12 @@ public class Range {
     /**
      * Returns the duration in minutes.
      */
-    public QuantityType<Time> getDuration() {
+    public State getDuration() {
         if (start == null || end == null) {
             return null;
         }
-        if (start.after(end)) {
-            return new QuantityType<>(0, Units.MINUTE);
-        }
-        return new QuantityType<>(end.getTimeInMillis() - start.getTimeInMillis(), MILLI(Units.SECOND))
-                .toUnit(Units.MINUTE);
+        return new QuantityType<Time>(start.after(end) ? 0 : end.getTimeInMillis() - start.getTimeInMillis(),
+                MILLI(Units.SECOND)).toUnit(Units.MINUTE);
     }
 
     /**

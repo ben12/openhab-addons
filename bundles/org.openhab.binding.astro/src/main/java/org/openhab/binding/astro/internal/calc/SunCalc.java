@@ -12,6 +12,7 @@
  */
 package org.openhab.binding.astro.internal.calc;
 
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Map.Entry;
 
@@ -90,7 +91,7 @@ public class SunCalc {
     /**
      * Calculates sun radiation data.
      */
-    public void setRadiationInfo(Calendar calendar, double elevation, Double altitude, Sun sun) {
+    private void setRadiationInfo(Calendar calendar, double elevation, Double altitude, Sun sun) {
         double sinAlpha = Math.sin(DEG2RAD * elevation);
 
         int dayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
@@ -248,7 +249,9 @@ public class SunCalc {
         zodiacCalc.getZodiac(calendar).ifPresent(z -> sun.setZodiac(z));
 
         SeasonCalc seasonCalc = new SeasonCalc();
-        sun.setSeason(seasonCalc.getSeason(calendar, latitude, useMeteorologicalSeason));
+        sun.setSeason(
+                seasonCalc.getSeason(ZonedDateTime.ofInstant(calendar.toInstant(), calendar.getTimeZone().toZoneId()),
+                        latitude, useMeteorologicalSeason));
 
         // phase
         for (Entry<SunPhaseName, Range> rangeEntry : sun.getAllRanges().entrySet()) {

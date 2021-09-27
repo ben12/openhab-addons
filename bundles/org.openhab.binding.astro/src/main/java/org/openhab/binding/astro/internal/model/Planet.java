@@ -12,10 +12,43 @@
  */
 package org.openhab.binding.astro.internal.model;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
+
 /**
- * Marker interface for all planets.
- * 
+ * Base class for the rise and set ranges.
+ *
  * @author Gerhard Riegler - Initial contribution
  */
-public interface Planet {
+@NonNullByDefault
+public abstract class Planet {
+    private Range rise = new Range();
+    private Range set = new Range();
+
+    /**
+     * Returns the rise range.
+     */
+    public Range getRise() {
+        return rise;
+    }
+
+    /**
+     * Sets the rise range.
+     */
+    public void setRise(Range rise) {
+        this.rise = rise;
+    }
+
+    /**
+     * Returns the set range.
+     */
+    public Range getSet() {
+        return set;
+    }
+
+    /**
+     * Sets the set range.
+     */
+    public void setSet(Range set) {
+        this.set = set;
+    }
 }

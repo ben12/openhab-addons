@@ -12,22 +12,66 @@
  */
 package org.openhab.binding.astro.internal.model;
 
+import java.time.Month;
+
+import org.eclipse.jdt.annotation.NonNullByDefault;
+
 /**
- * Holds the sign of the zodiac.
+ * All zodiac signs.
  *
  * @author Gerhard Riegler - Initial contribution
  */
-public class Zodiac {
-    private ZodiacSign sign;
+@NonNullByDefault
+public enum Zodiac {
+    ARIES(Month.MARCH, 21, Month.APRIL, 19),
+    TAURUS(Month.APRIL, 20, Month.MAY, 20),
+    GEMINI(Month.MAY, 21, Month.JUNE, 20),
+    CANCER(Month.JUNE, 21, Month.JULY, 22),
+    LEO(Month.JULY, 23, Month.AUGUST, 22),
+    VIRGO(Month.AUGUST, 23, Month.SEPTEMBER, 22),
+    LIBRA(Month.SEPTEMBER, 23, Month.OCTOBER, 22),
+    SCORPIO(Month.OCTOBER, 23, Month.NOVEMBER, 21),
+    SAGITTARIUS(Month.NOVEMBER, 22, Month.DECEMBER, 21),
+    CAPRICORN(Month.DECEMBER, 22, Month.JANUARY, 19),
+    AQUARIUS(Month.JANUARY, 20, Month.FEBRUARY, 18),
+    PISCES(Month.FEBRUARY, 19, Month.MARCH, 20);
 
-    public Zodiac(ZodiacSign sign) {
-        this.sign = sign;
+    private final Month beginMonth;
+    private final int beginDay;
+    private final Month endMonth;
+    private final int endDay;
+
+    Zodiac(Month beginMonth, int beginDay, Month endMonth, int endDay) {
+        this.beginMonth = beginMonth;
+        this.beginDay = beginDay;
+        this.endMonth = endMonth;
+        this.endDay = endDay;
+    }
+
+    public Month getBeginMonth() {
+        return beginMonth;
+    }
+
+    public int getBeginDay() {
+        return beginDay;
+    }
+
+    public Month getEndMonth() {
+        return endMonth;
+    }
+
+    public int getEndDay() {
+        return endDay;
     }
 
     /**
-     * Returns the sign of the zodiac.
+     * @return the sign of the zodiac.
      */
-    public ZodiacSign getSign() {
-        return sign;
+    public String getSign() {
+        return name();
+    }
+
+    public boolean crossYears() {
+        return endMonth.getValue() < beginMonth.getValue();
     }
 }

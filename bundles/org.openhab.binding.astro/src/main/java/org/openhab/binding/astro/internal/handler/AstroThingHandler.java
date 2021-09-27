@@ -17,7 +17,9 @@ import static org.openhab.core.thing.type.ChannelKind.TRIGGER;
 import static org.openhab.core.types.RefreshType.REFRESH;
 
 import java.lang.invoke.MethodHandles;
+import java.text.SimpleDateFormat;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
@@ -27,6 +29,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -34,7 +37,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import javax.measure.quantity.Angle;
 
-import org.apache.commons.lang3.time.DateFormatUtils;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.astro.internal.action.AstroActions;
@@ -71,11 +73,11 @@ public abstract class AstroThingHandler extends BaseThingHandler {
     private static final String DAILY_MIDNIGHT = "30 0 0 * * ? *";
 
     /** Logger Instance */
-    protected final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     /** Scheduler to schedule jobs */
     private final CronScheduler cronScheduler;
-
+    private final SimpleDateFormat iso8601Formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
     protected final TimeZoneProvider timeZoneProvider;
 
     private final Lock monitor = new ReentrantLock();
@@ -92,6 +94,7 @@ public abstract class AstroThingHandler extends BaseThingHandler {
         super(thing);
         this.cronScheduler = scheduler;
         this.timeZoneProvider = timeZoneProvider;
+        this.iso8601Formatter.setTimeZone(TimeZone.getTimeZone(timeZoneProvider.getTimeZone()));
     }
 
     @Override
@@ -310,7 +313,24 @@ public abstract class AstroThingHandler extends BaseThingHandler {
             monitor.unlock();
         }
         if (logger.isDebugEnabled()) {
-            String formattedDate = DateFormatUtils.ISO_DATETIME_FORMAT.format(eventAt);
+            String formattedDate = this.iso8601Formatter.format(eventAt);
+            logger.debug("Scheduled {} in {}ms (at {})", job, sleepTime, formattedDate);
+        }
+    }
+
+    public void schedule(Job job, ZonedDateTime eventAt) {
+        long sleepTime;
+        monitor.lock();
+        try {
+            tidyScheduledFutures();
+            sleepTime = ZonedDateTime.now().withZoneSameLocal(eventAt.getZone()).until(eventAt, ChronoUnit.MILLIS);
+            ScheduledFuture<?> future = scheduler.schedule(job, sleepTime, TimeUnit.MILLISECONDS);
+            scheduledFutures.add(future);
+        } finally {
+            monitor.unlock();
+        }
+        if (logger.isDebugEnabled()) {
+            String formattedDate = this.iso8601Formatter.format(eventAt);
             logger.debug("Scheduled {} in {}ms (at {})", job, sleepTime, formattedDate);
         }
     }

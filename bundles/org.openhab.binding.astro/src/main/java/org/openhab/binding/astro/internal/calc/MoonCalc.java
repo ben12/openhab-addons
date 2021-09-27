@@ -26,7 +26,6 @@ import org.openhab.binding.astro.internal.model.MoonPhaseName;
 import org.openhab.binding.astro.internal.model.Position;
 import org.openhab.binding.astro.internal.model.Range;
 import org.openhab.binding.astro.internal.model.Zodiac;
-import org.openhab.binding.astro.internal.model.ZodiacSign;
 import org.openhab.binding.astro.internal.util.DateTimeUtils;
 
 /**
@@ -87,15 +86,11 @@ public class MoonCalc {
         });
 
         double decimalYear = DateTimeUtils.getDecimalYear(calendar);
-        MoonDistance apogee = moon.getApogee();
         double apogeeJd = getApogee(julianDate, decimalYear);
-        apogee.setDate(DateTimeUtils.toCalendar(apogeeJd));
-        apogee.setDistance(getDistance(apogeeJd));
+        moon.setApogee(new MoonDistance(DateTimeUtils.toCalendar(apogeeJd), getDistance(apogeeJd)));
 
-        MoonDistance perigee = moon.getPerigee();
         double perigeeJd = getPerigee(julianDate, decimalYear);
-        perigee.setDate(DateTimeUtils.toCalendar(perigeeJd));
-        perigee.setDistance(getDistance(perigeeJd));
+        moon.setPerigee(new MoonDistance(DateTimeUtils.toCalendar(perigeeJd), getDistance(perigeeJd)));
 
         return moon;
     }
@@ -108,9 +103,7 @@ public class MoonCalc {
         setMoonPhase(calendar, moon);
         setAzimuthElevationZodiac(julianDate, latitude, longitude, moon);
 
-        MoonDistance distance = moon.getDistance();
-        distance.setDate(Calendar.getInstance());
-        distance.setDistance(getDistance(julianDate));
+        moon.setDistance(new MoonDistance(Calendar.getInstance(), getDistance(julianDate)));
     }
 
     /**
@@ -391,7 +384,7 @@ public class MoonCalc {
     /**
      * Calculates the previous moon phase.
      */
-    public double getPreviousPhase(Calendar cal, double jd, double mode) {
+    private double getPreviousPhase(Calendar cal, double jd, double mode) {
         double tz = 0;
         double phaseJd = 0;
         do {
@@ -494,7 +487,7 @@ public class MoonCalc {
         return sr;
     }
 
-    public double[] calcMoon(double t) {
+    private double[] calcMoon(double t) {
         double p2 = 6.283185307;
         double arc = 206264.8062;
         double coseps = .91748;
@@ -701,15 +694,10 @@ public class MoonCalc {
 
         // zodiac
         double idxd = Math.floor(moonLon * SunCalc.RAD2DEG / 30);
-        int idx = 0;
-        if (idxd < 0) {
-            idx = (int) (Math.ceil(idxd));
-        } else {
-            idx = (int) (Math.floor(idxd));
-        }
+        int idx = idxd < 0 ? (int) Math.ceil(idxd) : (int) Math.floor(idxd);
 
-        if (idx >= 0 || idx <= ZodiacSign.values().length) {
-            moon.setZodiac(new Zodiac(ZodiacSign.values()[idx]));
+        if (idx >= 0 || idx <= Zodiac.values().length) {
+            moon.setZodiac(Zodiac.values()[idx]);
         }
     }
 
