@@ -95,6 +95,20 @@ public interface Job extends SchedulerRunnable, Runnable {
      */
     public static void scheduleEvent(String thingUID, AstroThingHandler astroHandler, Calendar eventAt, String event,
             String channelId, boolean configAlreadyApplied) {
+        scheduleEvent(thingUID, astroHandler, eventAt, List.of(event), channelId, configAlreadyApplied);
+    }
+
+    /**
+     * Schedules an {@link EventJob} instance
+     *
+     * @param thingUID the Thing UID
+     * @param astroHandler the {@link AstroThingHandler} instance
+     * @param eventAt the {@link ZonedDateTime} instance denoting scheduled instant
+     * @param event the event ID
+     * @param channelId the channel ID
+     */
+    public static void scheduleEvent(String thingUID, AstroThingHandler astroHandler, ZonedDateTime eventAt,
+            String event, String channelId, boolean configAlreadyApplied) {
         scheduleEvent(thingUID, astroHandler, eventAt, singletonList(event), channelId, configAlreadyApplied);
     }
 
@@ -114,6 +128,37 @@ public interface Job extends SchedulerRunnable, Runnable {
             return;
         }
         final Calendar instant;
+        if (!configAlreadyApplied) {
+            final Channel channel = astroHandler.getThing().getChannel(channelId);
+            if (channel == null) {
+                LOGGER.warn("Cannot find channel '{}' for thing '{}'.", channelId, astroHandler.getThing().getUID());
+                return;
+            }
+            AstroChannelConfig config = channel.getConfiguration().as(AstroChannelConfig.class);
+            instant = applyConfig(eventAt, config);
+        } else {
+            instant = eventAt;
+        }
+        List<Job> jobs = events.stream().map(e -> new EventJob(thingUID, channelId, e)).collect(toList());
+        schedule(thingUID, astroHandler, new CompositeJob(thingUID, jobs), instant);
+    }
+
+    /**
+     * Schedules an {@link EventJob} instance
+     *
+     * @param thingUID the Thing UID
+     * @param astroHandler the {@link AstroThingHandler} instance
+     * @param eventAt the {@link ZonedDateTime} instance denoting scheduled instant
+     * @param events the event IDs to schedule
+     * @param channelId the channel ID
+     */
+    public static void scheduleEvent(String thingUID, AstroThingHandler astroHandler, ZonedDateTime eventAt,
+            List<String> events, String channelId, boolean configAlreadyApplied) {
+
+        if (events.isEmpty()) {
+            return;
+        }
+        final ZonedDateTime instant;
         if (!configAlreadyApplied) {
             final Channel channel = astroHandler.getThing().getChannel(channelId);
             if (channel == null) {

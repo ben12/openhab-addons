@@ -14,6 +14,7 @@ package org.openhab.binding.astro.internal.calc;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 
 import org.openhab.binding.astro.internal.model.Eclipse;
@@ -87,10 +88,10 @@ public class MoonCalc {
 
         double decimalYear = DateTimeUtils.getDecimalYear(calendar);
         double apogeeJd = getApogee(julianDate, decimalYear);
-        moon.setApogee(new MoonDistance(DateTimeUtils.toCalendar(apogeeJd), getDistance(apogeeJd)));
+        moon.setApogee(new MoonDistance(DateTimeUtils.toZonedDateTime(apogeeJd), getDistance(apogeeJd)));
 
         double perigeeJd = getPerigee(julianDate, decimalYear);
-        moon.setPerigee(new MoonDistance(DateTimeUtils.toCalendar(perigeeJd), getDistance(perigeeJd)));
+        moon.setPerigee(new MoonDistance(DateTimeUtils.toZonedDateTime(perigeeJd), getDistance(perigeeJd)));
 
         return moon;
     }
@@ -103,7 +104,7 @@ public class MoonCalc {
         setMoonPhase(calendar, moon);
         setAzimuthElevationZodiac(julianDate, latitude, longitude, moon);
 
-        moon.setDistance(new MoonDistance(Calendar.getInstance(), getDistance(julianDate)));
+        moon.setDistance(new MoonDistance(ZonedDateTime.now(), getDistance(julianDate)));
     }
 
     /**

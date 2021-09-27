@@ -15,7 +15,7 @@ package org.openhab.binding.astro.internal.model;
 import static org.openhab.core.library.unit.MetricPrefix.KILO;
 import static org.openhab.core.library.unit.SIUnits.METRE;
 
-import java.util.Calendar;
+import java.time.ZonedDateTime;
 
 import javax.measure.quantity.Length;
 
@@ -31,10 +31,10 @@ import org.openhab.core.types.State;
  */
 @NonNullByDefault
 public class MoonDistance {
-    private Calendar date;
+    private ZonedDateTime date;
     private double distance;
 
-    public MoonDistance(Calendar date, double distance) {
+    public MoonDistance(ZonedDateTime date, double distance) {
         this.date = date;
         this.distance = distance;
     }
@@ -42,7 +42,7 @@ public class MoonDistance {
     /**
      * @return the date of the calculated distance.
      */
-    public Calendar getDate() {
+    public ZonedDateTime getDate() {
         return date;
     }
 
