@@ -287,6 +287,9 @@ public class GoveeHygrometerHandler extends ConnectedBluetoothHandler {
                 return 10;
             case H5179:
                 return 8;
+            case H5072:
+            case H5075:
+                return 5;
             default:
                 return 7;
         }
@@ -298,7 +301,7 @@ public class GoveeHygrometerHandler extends ConnectedBluetoothHandler {
         byte[] scanData = scanNotification.getData();
         int dataPacketSize = scanPacketSize();
         int recordIndex = indexOfTemHumRecord(scanData);
-        if (recordIndex == -1 || recordIndex + dataPacketSize >= scanData.length) {
+        if (recordIndex == -1 || recordIndex + dataPacketSize > scanData.length) {
             return;
         }
 
@@ -351,11 +354,11 @@ public class GoveeHygrometerHandler extends ConnectedBluetoothHandler {
     }
 
     private static int indexOfTemHumRecord(byte @Nullable [] scanData) {
-        if (scanData == null || scanData.length != 62) {
+        if (scanData == null) {
             return -1;
         }
         int i = 0;
-        while (i < 57) {
+        while (i < scanData.length - 5) {
             int recordLength = scanData[i] & 0xFF;
             if (scanData[i + 1] == SCAN_HEADER[0]//
                     && scanData[i + 2] == SCAN_HEADER[1]//
